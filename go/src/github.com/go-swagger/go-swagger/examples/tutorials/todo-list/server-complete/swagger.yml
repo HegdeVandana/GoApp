@@ -32,7 +32,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: "#/definitions/profile" 
+              $ref: "#/definitions/profiles" 
         default:
           description: generic error response
           schema:
@@ -53,19 +53,19 @@ paths:
         - name: body
           in: body
           schema:
-            $ref: "#/definitions/profile"
+            $ref: "#/definitions/profiles"
       responses:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/profile"
+            $ref: "#/definitions/profiles"
         default:
           description: error
           schema:
             $ref: "#/definitions/error"   
  
 definitions:
- profile:
+ profiles:
     type: object
     properties:
       id:
@@ -75,7 +75,22 @@ definitions:
         type: string
       email:
         type: string 
-      
+      resources:
+        type: object
+        properties:
+           id:
+            type: integer
+           item1:
+             type: string
+           item2:
+             type: string
+           item3: 
+             type: string
+
+ 
+  
+
+         
  error:
     type: object
     required:

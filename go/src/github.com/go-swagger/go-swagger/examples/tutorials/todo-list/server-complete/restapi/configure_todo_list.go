@@ -7,6 +7,7 @@ import (//"fmt"
         //"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
+         _ "github.com/jinzhu/gorm/dialects/sqlite"
 	"crypto/tls"
 	"net/http"
 	//"sync"
@@ -29,8 +30,6 @@ import (//"fmt"
  //var  items = make(map[int64]*models.Item)
  var lastID int64
 
- 
-//var itemsLock = &sync.Mutex{}
 func InitDb() *gorm.DB {
 	// Openning file
 	db, err := gorm.Open("sqlite3", "./data.db")
@@ -42,16 +41,17 @@ func InitDb() *gorm.DB {
 		panic(err)
 	}
 	// Creating the table
-	if !db.HasTable(&models.Profile{}) {
-		db.CreateTable(&models.Profile{})
-		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&models.Profile{})
-              
+	if !db.HasTable(&models.Profiles{}) {
+		db.CreateTable(&models.Profiles{})
+                db.CreateTable(&models.ProfilesResources{})
+                db.Model(&models.Profiles{}).Related(&models.ProfilesResources{})
+                
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&models.Profiles{})
+                db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&models.ProfilesResources{})
 	}
 return db        
 }
 
-
-        
 
 func newItemID() int64 {
 	return atomic.AddInt64(&lastID, 1)
@@ -62,34 +62,64 @@ func newItemID() int64 {
 
 
 
-func getProfile(since int64, limit int32) (result[] *models.Profile){
-         
+func getProfile(since int64, limit int32) (result[] *models.Profiles ){
+        
         // Connection to the database
 	db := InitDb()
+        
 	// Close connection database
 	 
-       defer db.Close()
-       var profiles []*models.Profile
-        
-      db.Find(&profiles)
-    
-     
-        
+       //defer db.Close()
        
-        
-	
-	return profiles 
-}        
+     var profiles []*models.Profiles
+     var profilesresources []*models.ProfilesResources
+     
+      db.Find(&profiles)
+      db.Find(&profilesresources)
+     
+    
+      db.Where(profilesresources).Find(&profiles)
+        for _, profile:=range profiles{
+       for _, resource:= range profilesresources{
 
-func getidProfile(id int64) (profile *models.Profile){        
+          if profile.ID==resource.ID{
+
+         profile.Resources=resource
+}
+       
+ }
+}
+           
+            
+        
+	return profiles
+}       
+
+func getidProfile(id int64) (profile *models.Profiles){        
     
        
         // Connection to the database
-	db := InitDb()
+	db:= InitDb()
 	// Close connection database
-	defer db.Close()
-       var profiles []*models.Profile
+	//defer db.Close()
+       var profiles []*models.Profiles
+       var profilesresources []*models.ProfilesResources
+       
        db.First(&profiles,id)
+       db.First(&profilesresources,ids)
+     
+
+       db.Where(profilesresources).Find(&profiles)
+        for _, profile:=range profiles{
+       for _, resource:= range profilesresources{
+
+          if profile.ID==resource.ID{
+
+         profile.Resources=resource
+}
+       
+ }
+}
 
     for _, profile:= range profiles{
     if profile.ID==id{
@@ -174,8 +204,5 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	return handler
 }
-
-
-
 
 
